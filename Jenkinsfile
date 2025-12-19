@@ -1,5 +1,5 @@
 pipeline {
-    agent { label 'worker' }
+    agent { label 'Worker' }
 
     triggers {
         githubPush()
