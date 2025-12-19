@@ -20,6 +20,7 @@ pipeline {
         stage("Checkout") {
             steps {
                 checkout scm   // Automatically checks out the branch that triggered the webhook
+                echo(message: 'Checked out branch: ' + env.GIT_BRANCH)
             }
         }
 
