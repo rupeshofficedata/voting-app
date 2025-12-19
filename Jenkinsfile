@@ -35,7 +35,11 @@ pipeline {
                         "uat": "UAT"
                     ]
 
-                    def branchName = env.GIT_BRANCH.replaceFirst(/^origin\//, "")
+                    // Normalize branch name (handles origin/* and refs/heads/*)
+                    def branchName = env.GIT_BRANCH
+                        .replaceFirst(/^origin\//, "")
+                        .replaceFirst(/^refs\/heads\//, "")
+
                     def targetEnv = envMap.get(branchName, "UNKNOWN")
 
                     if (targetEnv == "UNKNOWN") {
@@ -55,7 +59,10 @@ pipeline {
         stage("Deploy") {
             steps {
                 script {
-                    def branchName = env.GIT_BRANCH.replaceFirst(/^origin\//, "")
+                    def branchName = env.GIT_BRANCH
+                        .replaceFirst(/^origin\//, "")
+                        .replaceFirst(/^refs\/heads\//, "")
+
                     def envMap = [
                         "main": "PROD",
                         "develop": "DEV",
@@ -67,6 +74,10 @@ pipeline {
                     if (targetEnv != "UNKNOWN") {
                         sh """
                         echo "Deploying to ${targetEnv}..."
+                        # Remove old container if it exists to avoid conflicts
+                        docker rm -f ${APP_NAME}-${targetEnv.toLowerCase()} || true
+                        
+                        # Run new container
                         docker run -d --name ${APP_NAME}-${targetEnv.toLowerCase()} ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
                         """
                     }
