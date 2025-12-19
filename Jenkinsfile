@@ -42,6 +42,7 @@ pipeline {
                     }
 
                     sh """
+                    echo "Building Docker image for ${targetEnv} environment from branch ${branchName}..."
                     cd ${APP_NAME}
                     docker build -t ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName} .
                     docker push ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
