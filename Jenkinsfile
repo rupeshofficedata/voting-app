@@ -79,7 +79,9 @@ pipeline {
                     if (targetEnv != "UNKNOWN") {
                         sh """
                             echo "Deploying to ${targetEnv}..."
+                            #delete existing container if any
                             docker rm -f ${APP_NAME}-${targetEnv.toLowerCase()} || true
+                            #run new container
                             docker run -d --name ${APP_NAME}-${targetEnv.toLowerCase()} ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
                         """
                     }
