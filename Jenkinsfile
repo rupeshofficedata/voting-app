@@ -20,7 +20,7 @@ pipeline {
         stage("Checkout") {
             steps {
                 checkout scm   // Automatically checks out the branch that triggered the webhook
-                echo(message: 'Checked out branch: ' + env.GIT_BRANCH)
+                echo "Checked out branch: ${env.GIT_BRANCH}"
             }
         }
 
@@ -46,12 +46,17 @@ pipeline {
                         error "Branch ${branchName} not mapped to an environment!"
                     }
 
-                    sh """
                     echo "Building Docker image for ${targetEnv} environment from branch ${branchName}..."
-                    cd ${APP_NAME}
-                    docker build -t ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName} .
-                    docker push ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
-                    """
+
+                    dir("${APP_NAME}") {
+                        withCredentials([usernamePassword(credentialsId: 'jenkins-ci-push', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                            sh """
+                                echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                                docker build -t ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName} .
+                                docker push ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
+                            """
+                        }
+                    }
                 }
             }
         }
@@ -73,12 +78,9 @@ pipeline {
 
                     if (targetEnv != "UNKNOWN") {
                         sh """
-                        echo "Deploying to ${targetEnv}..."
-                        # Remove old container if it exists to avoid conflicts
-                        docker rm -f ${APP_NAME}-${targetEnv.toLowerCase()} || true
-                        
-                        # Run new container
-                        docker run -d --name ${APP_NAME}-${targetEnv.toLowerCase()} ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
+                            echo "Deploying to ${targetEnv}..."
+                            docker rm -f ${APP_NAME}-${targetEnv.toLowerCase()} || true
+                            docker run -d --name ${APP_NAME}-${targetEnv.toLowerCase()} ${DOCKER_REGISTRY}/${APP_NAME}:${targetEnv}-${branchName}
                         """
                     }
                 }
