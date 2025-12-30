@@ -1,0 +1,17 @@
+terraform/
+├── modules/
+│   └── vpc/
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+│
+├── bootstrap/
+│   └── main.tf              # creates S3 backend bucket (local state)
+│
+├── envs/
+│   └── dev/
+│       ├── backend.tf       # S3 remote backend
+│       ├── main.tf          # uses VPC module
+│       └── terraform.tfvars
+│
+└── versions.tf
