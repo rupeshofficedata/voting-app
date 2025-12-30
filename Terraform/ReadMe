@@ -1,17 +1,37 @@
 terraform/
-├── modules/
-│   └── vpc/
-│       ├── main.tf
-│       ├── variables.tf
-│       └── outputs.tf
-│
 ├── bootstrap/
-│   └── main.tf              # creates S3 backend bucket (local state)
+│   └── main.tf              # shared S3 backend bucket
 │
 ├── envs/
-│   └── dev/
-│       ├── backend.tf       # S3 remote backend
-│       ├── main.tf          # uses VPC module
-│       └── terraform.tfvars
+│   ├── dev/
+│   │   ├── backend.tf
+│   │   └── main.tf
+│   ├── stage/
+│   │   ├── backend.tf
+│   │   └── main.tf
+│   └── prod/
+│       ├── backend.tf
+│       └── main.tf
 │
 └── versions.tf
+
+Deployment Order (Important)
+cd envs/dev
+terraform init -reconfigure
+terraform apply
+
+cd ../stage
+terraform init -reconfigure
+terraform apply
+
+cd ../prod
+terraform init -reconfigure
+terraform apply
+
+Each environment:
+
+Has isolated state
+
+Can be destroyed independently
+
+Cannot accidentally modify another env
